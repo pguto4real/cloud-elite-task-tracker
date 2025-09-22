@@ -1,0 +1,44 @@
+type Task {
+  taskId: ID!
+  title: String!
+  status: String
+}
+
+type TaskSuggestion {
+  title: String!
+  priority: String!
+  reason: String!
+}
+
+type Query {
+  listTasks: [Tasks]
+  getTask(taskId: ID!): Tasks
+  prioritizeTasks(tasks: [TaskInput!]!): [TaskSuggestion]
+}
+
+type Mutation {
+  createTasks(input: CreateTasksInput!): Task
+  updateTasks(input: UpdateTasksInput!): Task
+  deleteTasks(input: DeleteTasksInput!): Task
+}
+
+input TaskInput {
+  taskId: ID!
+  title: String!
+  status: String
+}
+
+input CreateTasksInput {
+  taskId: ID!
+  title: String!
+  status: String
+}
+
+input UpdateTasksInput {
+  taskId: ID!
+  status: String
+}
+
+input DeleteTasksInput {
+  taskId: ID!
+}
