@@ -4,12 +4,12 @@ import { Authenticator } from "@aws-amplify/ui-react";
 import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
 
-import outputs from "../amplify_outputs.json";
+// import outputs from "./amplify_outputs.json";
 import TaskManagerGraphQL from "./TaskManagerGraphQL";
 import TaskManagerRest from "./TaskManagerRest";
 
 // 👉 Configure Amplify with outputs.json
-Amplify.configure(outputs);
+// Amplify.configure(outputs);
 
 export default function App() {
   const [mode, setMode] = useState("graphql"); // "graphql" | "rest"
