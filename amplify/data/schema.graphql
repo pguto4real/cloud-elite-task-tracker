@@ -1,44 +1,172 @@
-type Task {
-  taskId: ID!
-  title: String!
-  status: String
+# ------------------------
+# Inputs
+# ------------------------
+input CreateTasksInput {
+	taskId: String!
+	title: String!
+	status: String
+	owner: String
 }
 
-type TaskSuggestion {
-  title: String!
+input DeleteTasksInput {
+	taskId: String!
+}
+
+# ------------------------
+# Filtering Inputs
+# ------------------------
+input ModelSizeInput {
+	between: [Int]
+	eq: Int
+	ge: Int
+	gt: Int
+	le: Int
+	lt: Int
+	ne: Int
+}
+type PrioritizedTask {
+  task: String!
   priority: String!
   reason: String!
 }
 
 type Query {
-  listTasks: [Tasks]
-  getTask(taskId: ID!): Tasks
-  prioritizeTasks(tasks: [TaskInput!]!): [TaskSuggestion]
+  prioritizeTasks(tasks: [String!]!): [PrioritizedTask] @function(name: "prioritizeTasksLambda")
 }
 
-type Mutation {
-  createTasks(input: CreateTasksInput!): Task
-  updateTasks(input: UpdateTasksInput!): Task
-  deleteTasks(input: DeleteTasksInput!): Task
+input TableBooleanFilterInput {
+	attributeExists: Boolean
+	eq: Boolean
+	ne: Boolean
 }
 
-input TaskInput {
-  taskId: ID!
-  title: String!
-  status: String
+input TableFloatFilterInput {
+	attributeExists: Boolean
+	between: [Float]
+	eq: Float
+	ge: Float
+	gt: Float
+	le: Float
+	lt: Float
+	ne: Float
 }
 
-input CreateTasksInput {
-  taskId: ID!
-  title: String!
-  status: String
+input TableIDFilterInput {
+	attributeExists: Boolean
+	beginsWith: ID
+	between: [ID]
+	contains: ID
+	eq: ID
+	ge: ID
+	gt: ID
+	le: ID
+	lt: ID
+	ne: ID
+	notContains: ID
+	size: ModelSizeInput
+}
+
+input TableIntFilterInput {
+	attributeExists: Boolean
+	between: [Int]
+	eq: Int
+	ge: Int
+	gt: Int
+	le: Int
+	lt: Int
+	ne: Int
+}
+
+input TableStringFilterInput {
+	attributeExists: Boolean
+	beginsWith: String
+	between: [String]
+	contains: String
+	eq: String
+	ge: String
+	gt: String
+	le: String
+	lt: String
+	ne: String
+	notContains: String
+	size: ModelSizeInput
+}
+
+input TableTasksFilterInput {
+	taskId: TableStringFilterInput
+	title: TableStringFilterInput
+	status: TableStringFilterInput
+	owner: TableStringFilterInput
+}
+
+# ------------------------
+# Main Type
+# ------------------------
+type Tasks {
+	taskId: String!
+	title: String!
+	status: String
+	owner: String!
+}
+
+type TasksConnection {
+	items: [Tasks]
+	nextToken: String
 }
 
 input UpdateTasksInput {
-  taskId: ID!
-  status: String
+	taskId: String!
+	title: String
+	status: String
+	owner: String
 }
 
-input DeleteTasksInput {
-  taskId: ID!
+# ------------------------
+# Mutations
+# ------------------------
+type Mutation {
+	createTasks(input: CreateTasksInput!): Tasks
+	deleteTasks(input: DeleteTasksInput!): Tasks
+	updateTasks(input: UpdateTasksInput!): Tasks
+}
+
+# ------------------------
+# Queries
+# ------------------------
+type Query {
+	getTasks(taskId: String!): Tasks
+	listTasks(filter: TableTasksFilterInput, limit: Int, nextToken: String): TasksConnection
+}
+
+# ------------------------
+# Subscriptions
+# ------------------------
+type Subscription {
+	onCreateTasks(
+		taskId: String,
+		title: String,
+		status: String,
+		owner: String
+	): Tasks
+		@aws_subscribe(mutations: ["createTasks"])
+	onDeleteTasks(
+		taskId: String,
+		title: String,
+		status: String,
+		owner: String
+	): Tasks
+		@aws_subscribe(mutations: ["deleteTasks"])
+	onUpdateTasks(
+		taskId: String,
+		title: String,
+		status: String,
+		owner: String
+	): Tasks
+		@aws_subscribe(mutations: ["updateTasks"])
+}
+
+schema {
+	query: Query
+	mutation: Mutation
+	subscription: Subscription
 }

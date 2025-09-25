@@ -1,19 +1,16 @@
 // src/TaskManager.jsx
 import React, { useState, useEffect } from "react";
 import { generateClient } from "aws-amplify/api";
-
+import { getCurrentUser } from "aws-amplify/auth";
 const client = generateClient();
 
-export default function TaskManager({name}) {
+export default function TaskManager() {
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [sortField, setSortField] = useState("title");
   const [sortAsc, setSortAsc] = useState(true);
-
-  // 👇 Fetch tasks (GraphQL)
-  async function fetchTasks() {
-    try {
-      const res = await client.graphql({
+  
+let data = {
         query: `
           query ListTasks {
             listTasks {
@@ -21,22 +18,52 @@ export default function TaskManager({name}) {
                 taskId
                 title
                 status
+                owner
               }
             }
           }
         `,
         authMode: "userPool", // Cognito auth
-      });
-      setTasks(res.data.listTasks.items || []);
-    } catch (err) {
-      console.error("Error fetching tasks:", err);
-    }
+      }
+  // 👇 Fetch tasks (GraphQL)
+  async function fetchTasks() {
+  try {
+    const user = await getCurrentUser();
+    const userId = user.userId; // 👈 Cognito sub (unique ID)
+
+    const res = await client.graphql({
+      query: `
+        query ListTasks($filter: TableTasksFilterInput) {
+          listTasks(filter: $filter) {
+            items {
+              taskId
+              title
+              status
+              owner
+            }
+          }
+        }
+      `,
+      variables: {
+        filter: {
+          owner: { eq: userId }  // 👈 filter by owner
+        }
+      },
+      authMode: "userPool",
+    });
+
+    setTasks(res.data.listTasks.items || []);
+  } catch (err) {
+    console.error("Error fetching tasks:", err);
   }
+}
 
   // 👇 Add a new task
   async function addTask() {
     if (!newTaskTitle.trim()) return;
     try {
+      const user = await getCurrentUser();
+      const data = 
       await client.graphql({
         query: `
           mutation CreateTask($input: CreateTasksInput!) {
@@ -44,6 +71,7 @@ export default function TaskManager({name}) {
               taskId
               title
               status
+              owner
             }
           }
         `,
@@ -52,6 +80,7 @@ export default function TaskManager({name}) {
             taskId: Date.now().toString(), // simple ID
             title: newTaskTitle,
             status: "pending",
+            owner: user.userId,
           },
         },
         authMode: "userPool",
@@ -132,7 +161,7 @@ export default function TaskManager({name}) {
 
   return (
     <div>
-      <h2>My Tasks ({ name})</h2>
+      <h2>My Tasks</h2>
 
       <div style={{ marginBottom: "1rem" }}>
         <input

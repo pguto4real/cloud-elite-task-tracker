@@ -1,12 +1,27 @@
-# React + Vite
+# 🚀 Serverless AI-Powered Task Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A fully serverless web application built on AWS that allows users to securely manage tasks (Create, View, Update, Delete) and receive AI-powered task prioritization suggestions via Amazon Bedrock.  
+This project demonstrates the integration of **React, Amplify, Lambda, API Gateway, DynamoDB, Cognito, and Bedrock** in a production-ready workflow with CI/CD.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📊 Features
+- 🔐 **Secure Authentication** with Amazon Cognito (email-based login).
+- 📋 **Task Management (CRUD)** with API Gateway + Lambda + DynamoDB.
+- ⚡ **GraphQL API** via AppSync for clean queries and mutations.
+- 🤖 **AI-Powered Task Prioritization** using Amazon Bedrock.
+- 🚀 **CI/CD with Amplify** → GitHub push auto-deploys to Amplify hosting.
+- 📈 **Monitoring & Logs** via CloudWatch.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🏗️ Architecture
+
+**Frontend**: React (Amplify Hosting)  
+**Backend**: Lambda (Node.js/Python) behind API Gateway/AppSync  
+**Data Layer**: DynamoDB (Tasks table)  
+**Auth**: Amazon Cognito (User Pool + App Client)  
+**AI**: Amazon Bedrock (Foundation Model integration)  
+**CI/CD**: Amplify connected to GitHub  
+**Monitoring**: CloudWatch (logs + alarms)  
+

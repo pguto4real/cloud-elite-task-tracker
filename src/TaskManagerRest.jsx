@@ -3,12 +3,12 @@ import React, { useState, useEffect } from "react";
 import { get, post, put, del } from "aws-amplify/api";
 import { fetchAuthSession } from "aws-amplify/auth";
 
-export default function TaskManager({name}) {
+export default function TaskManager({name,userId}) {
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [sortField, setSortField] = useState("title"); // 👈 sort by "title" or "status"
   const [sortAsc, setSortAsc] = useState(true);
-console.log(name)
+
   // 👇 helper to get the token once
   async function getAuthHeaders() {
     const session = await fetchAuthSession();
@@ -45,7 +45,7 @@ console.log(name)
       await post({
         apiName: "TaskAPI",
         path: "/tasks",
-        options: { headers, body: { title: newTaskTitle, done: false } },
+        options: { headers, body: { title: newTaskTitle,owner:userId, done: false } },
       }).response;
 
       await fetchTasks();
@@ -110,7 +110,7 @@ console.log(name)
 
   return (
     <div>
-      <h2>My Tasks { name}</h2>
+      <h2>My Tasks ({ name})</h2>
 
       <div style={{ marginBottom: "1rem" }}>
         <input
