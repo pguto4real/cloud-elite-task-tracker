@@ -1,147 +1,38 @@
 // src/TaskManager.jsx
-import React, { useState, useEffect } from "react";
-import { generateClient } from "aws-amplify/api";
-import { getCurrentUser } from "aws-amplify/auth";
-const client = generateClient();
+import React, { useState } from "react";
+import TaskPriorityGrapgQL from "./TaskPriorityGrapgQL";
+import { addTask  } from "./apiGraphQl/addTask"
+import { markTaskDone  } from "./apiGraphQl/markTaskDone"
+import { deleteTask   } from "./apiGraphQl/deleteTask"
 
-export default function TaskManager() {
-  const [tasks, setTasks] = useState([]);
+export default function TaskManager({tasks,onTaskAddedQl}) {
+  // const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [sortField, setSortField] = useState("title");
   const [sortAsc, setSortAsc] = useState(true);
   
-let data = {
-        query: `
-          query ListTasks {
-            listTasks {
-              items {
-                taskId
-                title
-                status
-                owner
-              }
-            }
-          }
-        `,
-        authMode: "userPool", // Cognito auth
-      }
-  // 👇 Fetch tasks (GraphQL)
-  async function fetchTasks() {
-  try {
-    const user = await getCurrentUser();
-    const userId = user.userId; // 👈 Cognito sub (unique ID)
-
-    const res = await client.graphql({
-      query: `
-        query ListTasks($filter: TableTasksFilterInput) {
-          listTasks(filter: $filter) {
-            items {
-              taskId
-              title
-              status
-              owner
-            }
-          }
-        }
-      `,
-      variables: {
-        filter: {
-          owner: { eq: userId }  // 👈 filter by owner
-        }
-      },
-      authMode: "userPool",
-    });
-
-    setTasks(res.data.listTasks.items || []);
-  } catch (err) {
-    console.error("Error fetching tasks:", err);
-  }
-}
-
-  // 👇 Add a new task
-  async function addTask() {
-    if (!newTaskTitle.trim()) return;
-    try {
-      const user = await getCurrentUser();
-      const data = 
-      await client.graphql({
-        query: `
-          mutation CreateTask($input: CreateTasksInput!) {
-            createTasks(input: $input) {
-              taskId
-              title
-              status
-              owner
-            }
-          }
-        `,
-        variables: {
-          input: {
-            taskId: Date.now().toString(), // simple ID
-            title: newTaskTitle,
-            status: "pending",
-            owner: user.userId,
-          },
-        },
-        authMode: "userPool",
-      });
+  // Add task
+  async function handleAddTask() {
+    const created = await addTask(newTaskTitle);
+    if (created) {
       setNewTaskTitle("");
-      await fetchTasks();
-    } catch (err) {
-      console.error("Error creating task:", err);
+      if (onTaskAddedQl) onTaskAddedQl();
+      // await loadTasks();
     }
   }
 
-  // 👇 Mark a task as done
-  async function markTaskDone(taskId) {
-  try {
-    await client.graphql({
-      query: `
-        mutation UpdateTask($input: UpdateTasksInput!) {
-          updateTasks(input: $input) {
-            taskId
-            status
-          }
-        }
-      `,
-      variables: {
-        input: { taskId, status: "done" },
-      },
-      authMode: "userPool",
-    });
-    await fetchTasks();
-  } catch (err) {
-    console.error("Error marking task done:", err);
+// Mark done
+  async function handleMarkDone(taskId) {
+    await markTaskDone(taskId);
+   if (onTaskAddedQl) onTaskAddedQl();
   }
-}
 
-
-  // 👇 Delete a task
-  async function deleteTask(taskId) {
-  try {
-    await client.graphql({
-      query: `
-        mutation DeleteTask($input: DeleteTasksInput!) {
-          deleteTasks(input: $input) {
-            taskId
-          }
-        }
-      `,
-      variables: {
-        input: { taskId }, // 👈 must pass the primary key defined in schema
-      },
-      authMode: "userPool",
-    });
-    await fetchTasks();
-  } catch (err) {
-    console.error("Error deleting task:", err);
+ // Delete
+  async function handleDelete(taskId) {
+    await deleteTask(taskId);
+    if (onTaskAddedQl) onTaskAddedQl();
   }
-}
 
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
 
   // 👇 Sorting logic
   const sortedTasks = [...tasks].sort((a, b) => {
@@ -170,7 +61,7 @@ let data = {
           placeholder="Enter task title..."
           onChange={(e) => setNewTaskTitle(e.target.value)}
         />
-        <button onClick={addTask}>Add Task</button>
+        <button onClick={handleAddTask}>Add Task</button>
       </div>
 
       <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
@@ -210,14 +101,15 @@ let data = {
               <td>{t.status === "done" ? "Done" : "Pending"}</td>
               <td>
                 {t.status !== "done" && (
-                  <button onClick={() => markTaskDone(t.taskId)}>Done</button>
+                  <button onClick={() => handleMarkDone(t.taskId)}>Done</button>
                 )}
-                <button onClick={() => deleteTask(t.taskId)}>Delete</button>
+                <button onClick={() => handleDelete(t.taskId)}>Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <TaskPriorityGrapgQL tasks={tasks} />
     </div>
   );
 }

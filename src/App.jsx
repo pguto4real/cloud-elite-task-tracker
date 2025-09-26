@@ -1,20 +1,42 @@
 // src/App.jsx
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { Authenticator } from "@aws-amplify/ui-react";
 import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
-
+import { fetchTasks } from "./api/fetchTasx";
+import { fetchTasksQl } from "./apiGraphQl/fetchTasks"
 // import outputs from "./amplify_outputs.json";
 import TaskManagerGraphQL from "./TaskManagerGraphQL";
 import TaskManagerRest from "./TaskManagerRest";
-import TaskPriority from "./TaskPriority";
+
 
 // 👉 Configure Amplify with outputs.json
 // Amplify.configure(outputs);
 
 export default function App() {
   const [mode, setMode] = useState("graphql"); // "graphql" | "rest"
+const [tasks, setTasks] = useState([]);
+const [tasksQl, setTasksQl] = useState([]);
 
+
+
+ async function loadTasks() {
+    const data = await fetchTasks();
+    console.log("i goth here")
+    setTasks(data);
+    console.log("i goth here")
+  }
+ async function loadTasksGraphQL() {
+    const data = await fetchTasksQl();
+    console.log(data)
+    console.log("i goth here")
+    setTasksQl(data);
+    console.log("i goth here")
+  }
+  useEffect(() => {
+    loadTasks();
+    loadTasksGraphQL();
+  }, []);
   return (
     <Authenticator>
       {({ signOut, user }) => (
@@ -32,9 +54,9 @@ export default function App() {
           </div>
 
           {/* Render Task Manager depending on mode */}
-          {mode === "graphql" && <TaskManagerGraphQL name="graphQl" userId={user.userId}/>}
-          {mode === "rest" && <TaskManagerRest name="ApiGateway"  userId={user.userId}/>}
-          {/* <TaskPriority/> */}
+          {mode === "graphql" && <TaskManagerGraphQL name="graphQl"  tasks={tasksQl} userId={user.userId} onTaskAddedQl={loadTasksGraphQL}/>}
+          {mode === "rest" && <TaskManagerRest name="ApiGateway" tasks={tasks}  onTaskAdded={loadTasks} userId={user.userId}/>}
+          
 
           <button onClick={signOut} style={{ marginTop: "1rem" }}>
             Sign out

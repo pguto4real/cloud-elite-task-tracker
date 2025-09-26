@@ -1,104 +1,54 @@
-// src/TaskManager.jsx
-import React, { useState, useEffect } from "react";
-import { get, post, put, del } from "aws-amplify/api";
-import { fetchAuthSession } from "aws-amplify/auth";
+import React, { useState } from "react";
+import { addTask } from "./api/addTask";
+import { markTaskDone } from "./api/markTaskDone";
+import { deleteTask } from "./api/deleteTask";
+import TaskPriority from "./TaskPriority";
 
-export default function TaskManager({name,userId}) {
-  const [tasks, setTasks] = useState([]);
+export default function TaskManager({ name, userId, tasks, onTaskAdded }) {
+
   const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [sortField, setSortField] = useState("title"); // 👈 sort by "title" or "status"
+  const [sortField, setSortField] = useState("title");
   const [sortAsc, setSortAsc] = useState(true);
 
-  // 👇 helper to get the token once
-  async function getAuthHeaders() {
-    const session = await fetchAuthSession();
-    
-    const token = session.tokens?.idToken.toString();
-    return {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
-  }
-
-  async function fetchTasks() {
+  async function handleAddTask() {
     try {
-      const headers = await getAuthHeaders();
-
-      const { body } = await get({
-        apiName: "TaskAPI",
-        path: "/tasks",
-        options: { headers },
-      }).response;
-
-      const data = await body.json();
-      setTasks(data);
+      const success = await addTask(newTaskTitle, userId);
+      if (success) {
+        setNewTaskTitle("");
+        if (onTaskAdded) onTaskAdded(); // 👈 notify parent
+      }
     } catch (err) {
-      console.error("Error fetching tasks:", err);
+      console.error("Add task failed:", err);
     }
   }
 
-  async function addTask() {
-    if (!newTaskTitle.trim()) return;
+  async function handleMarkTaskDone(taskId) {
     try {
-      const headers = await getAuthHeaders();
-
-      await post({
-        apiName: "TaskAPI",
-        path: "/tasks",
-        options: { headers, body: { title: newTaskTitle,owner:userId, done: false } },
-      }).response;
-
-      await fetchTasks();
-      setNewTaskTitle("");
+      const success = await markTaskDone(taskId);
+      if (success && onTaskAdded) onTaskAdded(); // 👈 notify parent
     } catch (err) {
-      console.error("Error creating task:", err);
+      console.error("Mark done failed:", err);
     }
   }
 
-  async function markTaskDone(taskId) {
+  async function handleDeleteTask(taskId) {
     try {
-      const headers = await getAuthHeaders();
-
-      await put({
-        apiName: "TaskAPI",
-        path: `/tasks/${taskId}`,
-        options: { headers },
-      }).response;
-
-      await fetchTasks();
+      const success = await deleteTask(taskId);
+      if (success && onTaskAdded) onTaskAdded(); // 👈 notify parent
     } catch (err) {
-      console.error("Error marking task done:", err);
+      console.error("Delete failed:", err);
     }
   }
 
-  async function deleteTask(taskId) {
-    try {
-      const headers = await getAuthHeaders();
+  // ❌ no need for local loadTasks here — parent owns the refresh
 
-      await del({
-        apiName: "TaskAPI",
-        path: `/tasks/${taskId}`,
-        options: { headers },
-      }).response;
-
-      await fetchTasks();
-    } catch (err) {
-      console.error("Error deleting task:", err);
-    }
-  }
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  // 👇 Sorting logic (title or status)
+  // sorting logic (unchanged)
   const sortedTasks = [...tasks].sort((a, b) => {
     if (sortField === "title") {
       if (a.title < b.title) return sortAsc ? -1 : 1;
       if (a.title > b.title) return sortAsc ? 1 : -1;
       return 0;
     } else if (sortField === "status") {
-      // Pending before Done if ascending
       const orderA = a.status === "done" ? 1 : 0;
       const orderB = b.status === "done" ? 1 : 0;
       if (orderA < orderB) return sortAsc ? -1 : 1;
@@ -110,7 +60,7 @@ export default function TaskManager({name,userId}) {
 
   return (
     <div>
-      <h2>My Tasks ({ name})</h2>
+      <h2>My Tasks ({name})</h2>
 
       <div style={{ marginBottom: "1rem" }}>
         <input
@@ -119,7 +69,7 @@ export default function TaskManager({name,userId}) {
           placeholder="Enter task title..."
           onChange={(e) => setNewTaskTitle(e.target.value)}
         />
-        <button onClick={addTask}>Add Task</button>
+        <button onClick={handleAddTask}>Add Task</button>
       </div>
 
       <table border="1" cellPadding="8" style={{ borderCollapse: "collapse", width: "100%" }}>
@@ -159,14 +109,15 @@ export default function TaskManager({name,userId}) {
               <td>{t.status === "done" ? "Done" : "Pending"}</td>
               <td>
                 {t.status !== "done" && (
-                  <button onClick={() => markTaskDone(t.taskId)}>Done</button>
+                  <button onClick={() => handleMarkTaskDone(t.taskId)}>Done</button>
                 )}
-                <button onClick={() => deleteTask(t.taskId)}>Delete</button>
+                <button onClick={() => handleDeleteTask(t.taskId)}>Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <TaskPriority tasks={tasks} />
     </div>
   );
 }

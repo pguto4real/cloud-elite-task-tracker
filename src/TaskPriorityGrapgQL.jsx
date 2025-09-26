@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { fetchAuthSession } from "aws-amplify/auth";
-import { post } from "aws-amplify/api";
+import { generateClient } from "aws-amplify/api";
 // import { fetchTasks } from "./api/fetchTasx";
 
 export default function PrioritizeDemo({ tasks }) {
@@ -8,48 +7,42 @@ export default function PrioritizeDemo({ tasks }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  async function getAuthHeaders() {
-    const session = await fetchAuthSession();
-    const token = session.tokens?.idToken?.toString();
-    return {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    };
-  }
+  const client = generateClient();
 
   function extractTitles(data) {
     if (!Array.isArray(data)) return [];
     return data.map((t) => t.title);
   }
+async function handlePrioritize() {
+  setLoading(true);
+  setError(null);
 
-  async function handlePrioritize() {
-    setLoading(true);
-    setError(null);
+  try {
+    const titles = extractTitles(tasks);
 
-    try {
-      const headers = await getAuthHeaders();
-      const titles = extractTitles(tasks);
+    const res = await client.graphql({
+      query: `
+        query PrioritizeTasks($tasks: [String!]!) {
+          prioritizeTasks(tasks: $tasks) {
+            task
+            priorityRank
+            reason
+          }
+        }
+      `,
+      variables: { tasks: titles },
+      authMode: "userPool",
+    });
 
-      // 👇 Get the response object
-      const response = await post({
-        apiName: "TaskAPI", // must match your Amplify API config
-        path: "/prioritize",
-        options: { headers, body: { tasks: titles } },
-      }).response;
-
-  
-      // 👇 Parse JSON from response body
-      const data = await response.body.json();
-
-      console.log("Raw API data:", data);
-      setResults(data.prioritization || []);
-    } catch (err) {
-      console.error("Error prioritizing tasksassasa:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    setResults(res.data.prioritizeTasks || []);
+    
+  } catch (err) {
+    console.error("Error prioritizing tasksffdfdfd:", err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div style={{ padding: "20px" }}>
@@ -57,7 +50,7 @@ export default function PrioritizeDemo({ tasks }) {
 
       <h3>Input Tasks</h3>
       <ul>
-        {tasks.map((t, i) => (
+        {tasks.map((t) => (
           <li key={t.taskId}>{t.title}</li>
         ))}
       </ul>
