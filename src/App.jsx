@@ -22,16 +22,15 @@ const [tasksQl, setTasksQl] = useState([]);
 
  async function loadTasks() {
     const data = await fetchTasks();
-    console.log("i goth here")
+    
     setTasks(data);
-    console.log("i goth here")
+    
   }
  async function loadTasksGraphQL() {
     const data = await fetchTasksQl();
-    console.log(data)
-    console.log("i goth here")
+    
     setTasksQl(data);
-    console.log("i goth here")
+    
   }
   useEffect(() => {
     loadTasks();

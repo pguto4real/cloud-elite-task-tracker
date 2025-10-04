@@ -1,27 +1,29 @@
-# 🚀 Serverless AI-Powered Task Tracker
+# AI-Powered Task Tracker
 
-A fully serverless web application built on AWS that allows users to securely manage tasks (Create, View, Update, Delete) and receive AI-powered task prioritization suggestions via Amazon Bedrock.  
-This project demonstrates the integration of **React, Amplify, Lambda, API Gateway, DynamoDB, Cognito, and Bedrock** in a production-ready workflow with CI/CD.
+## 📌 App Description
+The AI-Powered Task Tracker is a **serverless web application** that allows users to:
+- Create, view, update (mark done), and delete tasks.
+- Authenticate securely with **Amazon Cognito**.
+- Get **AI-powered task prioritization** suggestions using **Amazon Bedrock**.
+- Deploy automatically via **AWS Amplify CI/CD**.
 
----
-
-## 📊 Features
-- 🔐 **Secure Authentication** with Amazon Cognito (email-based login).
-- 📋 **Task Management (CRUD)** with API Gateway + Lambda + DynamoDB.
-- ⚡ **GraphQL API** via AppSync for clean queries and mutations.
-- 🤖 **AI-Powered Task Prioritization** using Amazon Bedrock.
-- 🚀 **CI/CD with Amplify** → GitHub push auto-deploys to Amplify hosting.
-- 📈 **Monitoring & Logs** via CloudWatch.
+This project demonstrates how to integrate AWS services into a full-stack, cloud-native application.
 
 ---
 
-## 🏗️ Architecture
+## 🛠️ Services Used
+- **Amazon Cognito** – Secure user authentication and JWT authorization.
+- **Amazon API Gateway** – Entry point for REST/GraphQL APIs.
+- **AWS Lambda** – Serverless compute for CRUD operations.
+- **Amazon DynamoDB** – NoSQL database to store tasks.
+- **AWS Amplify** – Hosting, GraphQL API, and CI/CD.
+- **Amazon Bedrock** – Generative AI task prioritization.
+- **Amazon CloudWatch** – Logging & monitoring of Lambda functions.
 
-**Frontend**: React (Amplify Hosting)  
-**Backend**: Lambda (Node.js/Python) behind API Gateway/AppSync  
-**Data Layer**: DynamoDB (Tasks table)  
-**Auth**: Amazon Cognito (User Pool + App Client)  
-**AI**: Amazon Bedrock (Foundation Model integration)  
-**CI/CD**: Amplify connected to GitHub  
-**Monitoring**: CloudWatch (logs + alarms)  
+---
 
+## ⚙️ Setup Steps
+1. **Clone Repository**  
+   ```bash
+   git clone https://github.com/your-username/task-tracker.git
+   cd task-tracker
